@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>OnePay Callback Receiver</title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io();
+    </script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>OnePay Dynamic QR</h1>
+      <img id="success" src="https://www.freeiconspng.com/uploads/success-icon-10.png" style="width: 1px; height: 1px"/>
+      <div id="qrcode">
+          <img class="qr-code">
+      </div>
+  
+      <p id="paymessage">Scan or Click to pay and see the result</p>
+      <p id="status"></p>
+  
+      <div id="callback">
+          <span>Callback Result:</span>
+          <pre id="result"></pre>
+      </div>
+      <div class="button">
+          <a class="one-click-pay">One Click Pay</a>
+      </div>
+  </div>
+  </body>
+  <script>
+    const code = '<%-code%>';
+    const expiretime = parseInt('<%-expiretime%>');
+    const uuid = "<%-uuid%>";
+    console.log(new Date(expiretime))
+  </script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="https://cdn.pubnub.com/sdk/javascript/pubnub.4.27.3.js"></script>
+  <script src="/onepay.js"></script>
+  <script>
+    $(function () {
+            socket.on('connect', function(soket) {
+                 console.log(soket.id)
+            });
+            socket.on("paymentConfirm", (arg) => {
+                    
+                    const data = JSON.parse(arg);
+                    console.log(data)
+                    if(data.message == 1 && data.res.uuid == uuid){
+                            document.getElementById("status").innerText = "The QR Code is Paid";
+                            document.getElementById("result").innerText = JSON.stringify(data.res, undefined, 2);
+                            document.getElementById("callback").style.display = "block";
+                            document.getElementById("qrcode").style.display = "none";
+                            document.getElementById("paymessage").style.display = "none";
+                            document.getElementsByClassName("one-click-pay").style.display = "none";
+
+                            let s = document.getElementById("success");
+                            s.style.width = "200px";
+                            s.style.height = "200px";
+                    }else{
+                       console.log(data.message);
+                    }
+                    
+                  });
+            $('.qr-code').attr('src', 'https://chart.googleapis.com/chart?chs=250x250&cht=qr&chl=' + code + '&choe=UTF-8'); // set QR code into image, Scan to pay
+            $('.one-click-pay').attr('href', 'onepay://qr/' + code) // set QR code into button, One click pay(payment link) for mobile app integration
+    })
+    /*
+    const $uuid = "8EF814A52CE934D5"; // transaction id ((please define as unique key))
+    const $tid = "T2 pro"; // terminal ID (in case have many terminals, POS devices or etc...)
+
+    //if (!$uuid) exit("Please set uuid in GET parameter");
+
+    // Bank provide these data
+    const $mcid = "mch5c2f0404102fb"; // merchant id
+    const $mcc = "5732"; // merchant category code
+    const $shopcode = "12345678"; // shop code
+    const $ccy = 418; // currency LAK
+    const $country = "LA";
+    const $province = "VTE";
+    $(function () { 
+      const mcid = $mcid; // merchant id
+      const shopcode = $shopcode; // shop code
+      const uuid = $uuid; // transaction id (please define as unique key)
+      const onePay = new OnePay(mcid); // create new OnePay instance
+        onePay.debug = true; // enable OnPay debug(Please looking on console log)
+
+        /* generate new QR code via onepay.js 
+        onePay.getCode({
+            transactionid: uuid, // please define as unique key
+            invoiceid: '123', // a invoice ID can pay many times OR have many transaction ID
+            terminalid: '001', // terminal ID (in case have many terminals, POS devices or etc...)
+            amount: 1, // invoice amount
+            description: 'Test', // must define as English text
+            expiretime: 15, // expire time must be minutes
+        }, function (code) {
+            //console.log(code)
+            $('.qr-code').attr('src', 'https://chart.googleapis.com/chart?chs=250x250&cht=qr&chl=' + code + '&choe=UTF-8'); // set QR code into image, Scan to pay
+            $('.one-click-pay').attr('href', 'onepay://qr/' + code) // set QR code into button, One click pay(payment link) for mobile app integration
+        });
+
+        /* define subscribe parameter(s) 
+        var subParams = {
+            uuid: uuid, // please specified uuid if would like to receive callback data only the transaction (for front-end subscribe)
+            shopcode: null, // please specified shopcode if would link to receive all callback for the merchant ID (for back-end subscribe)
+            tid: $tid // please specified tid(terminal ID) and shopcode if would link to receive all callback for the merchant ID and specific terminal (for terminal subscribe)
+        };
+        /* subscribe to receiving OnePay callback 
+        onePay.subscribe(subParams, function (res) {
+            if (res.uuid === uuid) {
+                document.getElementById("status").innerText = "The QR Code is Paid";
+                document.getElementById("result").innerText = JSON.stringify(res, undefined, 2);
+                document.getElementById("callback").style.display = "block";
+                document.getElementById("qrcode").style.display = "none";
+                document.getElementById("paymessage").style.display = "none";
+
+                var s = document.getElementById("success");
+                s.style.width = "200px";
+                s.style.height = "200px";
+            }
+        });
+    })*/
+</script>
+</html>
